@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knowledge_sharing_sqlflite/screen/todo_screen.dart';
+import 'package:knowledge_sharing_sqlflite/service/local_todo_service.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ProviderScope(
+    child: MyApp(),
+  ),);
 }
 
 class MyApp extends StatelessWidget {
@@ -20,30 +25,23 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    ref.read(localTodoServiceProvider).initializeDatabase();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('sqlflite sample'),
-      ),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              // TODO: test some sqlflite features
-            },
-            child: Text('Test button')
-          ),
-        ],
-      ),
-    );
+    return const TodoScreen();
   }
+
 }
