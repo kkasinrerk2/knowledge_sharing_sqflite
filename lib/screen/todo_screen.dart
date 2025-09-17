@@ -36,7 +36,9 @@ class _TodoScreen extends ConsumerStatefulWidget {
 class _TodoScreenState extends ConsumerState<_TodoScreen> {
   @override
   void initState() {
-    ref.read(todoControllerProvider.notifier).fetchTodo();
+    Future(() {
+      ref.read(todoControllerProvider.notifier).fetchTodo();
+    });
     super.initState();
   }
 
