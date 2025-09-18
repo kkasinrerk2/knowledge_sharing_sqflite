@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:knowledge_sharing_sqlflite/controller/todo_controller.dart';
 import 'package:knowledge_sharing_sqlflite/model/todo.dart';
+import 'package:knowledge_sharing_sqlflite/widget/subtask_item_widget.dart';
 
 class TodoItemWidget extends ConsumerStatefulWidget {
   final Todo todo;
@@ -12,15 +13,15 @@ class TodoItemWidget extends ConsumerStatefulWidget {
 }
 
 class _TodoItemWidgetState extends ConsumerState<TodoItemWidget> {
-  bool _editing = false;
-
   @override
   Widget build(BuildContext context) {
-    if (_editing) {
+    final id = widget.todo.id;
+    final editing = ref.watch(todoControllerProvider).editingSet.contains(id);
+    if (editing) {
       return _EditTodoItem(
         todo: widget.todo,
         onSave: () {
-          _editing = false;
+          ref.read(todoControllerProvider.notifier).setEditing(id, false);
         },
       );
     }
@@ -28,7 +29,7 @@ class _TodoItemWidgetState extends ConsumerState<TodoItemWidget> {
       todo: widget.todo,
       onTap: () {
         setState(() {
-          _editing = true;
+          ref.read(todoControllerProvider.notifier).setEditing(id, true);
         });
       },
     );
@@ -47,6 +48,7 @@ class _EditTodoItem extends ConsumerStatefulWidget {
 class _EditTodoItemState extends ConsumerState<_EditTodoItem> {
   final TextEditingController _titleCtr = TextEditingController();
   final TextEditingController _descCtr = TextEditingController();
+  final TextEditingController _newSubtaskCtr = TextEditingController();
 
   @override
   void initState() {
@@ -68,22 +70,69 @@ class _EditTodoItemState extends ConsumerState<_EditTodoItem> {
       title: TextField(
         controller: _titleCtr,
       ),
-      subtitle: TextField(
-        controller: _descCtr,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _descCtr,
+          ),
+          const SizedBox(height: 20),
+          _Subtasks(todo: widget.todo),
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _newSubtaskCtr,
+                  decoration: InputDecoration(hintText: 'Add subtask'),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  final text = _newSubtaskCtr.text;
+                  if (text.isNotEmpty) {
+                    ref.read(todoControllerProvider.notifier).newSubtask(
+                      widget.todo.id, _newSubtaskCtr.text);
+                  }
+                },
+                icon: Icon(
+                  Icons.add,
+                  color: _newSubtaskCtr.text.isNotEmpty ?
+                    Colors.lightGreen : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-      trailing: IconButton(
-        onPressed: () async {
-          await ref.read(todoControllerProvider.notifier).update(
-            widget.todo.copyWith(
-              title: _titleCtr.text,
-              description: _descCtr.text,
-            )
-          );
-          widget.onSave();
-        },
-        icon: Icon(
-          Icons.save,
-        )
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: () async {
+              await ref.read(todoControllerProvider.notifier).update(
+                  widget.todo.copyWith(
+                    title: _titleCtr.text,
+                    description: _descCtr.text,
+                  )
+              );
+              widget.onSave();
+            },
+            icon: Icon(
+              Icons.save,
+              size: 30,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              ref.read(todoControllerProvider.notifier).setEditing(
+                  widget.todo.id, false);
+            },
+            icon: Icon(Icons.close, size: 30),
+          ),
+        ],
       ),
     );
   }
@@ -105,15 +154,44 @@ class _ViewTodoItem extends ConsumerWidget {
         },
       ),
       title: Text(todo.title),
-      subtitle: Text(todo.description),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(todo.description),
+          const SizedBox(height: 20),
+          if (todo.subtasks.isNotEmpty)
+            _Subtasks(todo: todo),
+        ],
+      ),
       trailing: IconButton(
         onPressed: () {
-          ref.read(todoControllerProvider.notifier).delete(todo.id);
+          ref.read(todoControllerProvider.notifier).deleteTodo(todo.id);
         },
         icon: Icon(
           Icons.delete,
         )
       ),
+    );
+  }
+}
+
+class _Subtasks extends StatelessWidget {
+  final Todo todo;
+  const _Subtasks({required this.todo});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Subtasks: ',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        for (final subtask in todo.subtasks)
+          SubtaskItemWidget(subtask: subtask),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:knowledge_sharing_sqlflite/controller/todo_state.dart';
+import 'package:knowledge_sharing_sqlflite/model/subtask.dart';
 import 'package:knowledge_sharing_sqlflite/model/todo.dart';
 import 'package:knowledge_sharing_sqlflite/service/local_todo_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -35,9 +36,38 @@ class TodoController extends _$TodoController {
     }
   }
 
-  Future<void> delete(String id) async {
+  Future<void> deleteTodo(String id) async {
     try {
       final todoList = await _localTodoService.deleteTodo(id);
+      state = state.copyWith(
+        todoList: todoList,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> deleteSubtask(String subtaskId) async {
+    try {
+      final todoList = await _localTodoService.deleteSubtask(subtaskId);
+      state = state.copyWith(
+        todoList: todoList,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> newSubtask(String todoId, String task) async {
+    try {
+      final todoList = await _localTodoService.insertSubtask(
+        todoId,
+        Subtask(id: uuid.v4(), task: task),
+      );
       state = state.copyWith(
         todoList: todoList,
       );
@@ -88,6 +118,14 @@ class TodoController extends _$TodoController {
         error: e.toString(),
       );
     }
+  }
+
+  void setEditing(String id, bool editing) {
+    state = state.copyWith(
+      editingSet: editing ?
+      {...state.editingSet, id}.toSet() :
+      state.editingSet.where((it) => it != id).toSet(),
+    );
   }
 
 }

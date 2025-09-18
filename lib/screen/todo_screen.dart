@@ -59,7 +59,7 @@ class _TodoScreenState extends ConsumerState<_TodoScreen> {
       onRefresh: () async {
         await ref.read(todoControllerProvider.notifier).fetchTodo();
       },
-      child: ListView.builder(
+      child: ListView.separated(
         itemCount: state.todoList.length,
         itemBuilder: (context, index) {
           final item = state.todoList[index];
@@ -67,7 +67,10 @@ class _TodoScreenState extends ConsumerState<_TodoScreen> {
             key: ValueKey(item),
             todo: item,
           );
-        }
+        },
+        separatorBuilder: (_, __) {
+          return const Divider();
+        },
       ),
     );
   }
