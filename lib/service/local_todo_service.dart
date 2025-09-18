@@ -56,88 +56,32 @@ class LocalTodoService {
   }
 
   Future<List<Todo>> fetchTodo() async {
-    final db = await _db.future;
-    final List<Map<String, Object?>> res = await db.rawQuery(
-      '''
-      SELECT 
-        t.id,
-        t.title,
-        t.description,
-        t.updated_at,
-        t.done,
-        s.id AS subtask_id,
-        s.task
-      FROM $_todoListTable t
-      LEFT JOIN $_subtasksTable s ON s.todo_id = t.id
-      ORDER BY done ASC, updated_at DESC
-      '''
-    );
-
-    /// Map between todo.id and todo
-    final Map<String, Todo> todos = {};
-    for (final row in res) {
-      final todoRow = Todo.fromJson(row);
-      final subtask = Subtask.tryFromJson(row);
-      if (!todos.keys.contains(todoRow.id)) {
-        todos[todoRow.id] = todoRow;
-      }
-      if (subtask != null) {
-        todos[todoRow.id] = todoRow.copyWith(
-          subtasks: [...todos[todoRow.id]!.subtasks, subtask]
-        );
-      }
-    }
-    return todos.values.toList();
+    // TODO: implement this
+    return [];
   }
 
   Future<List<Todo>> deleteTodo(String id) async {
-    await (await _db.future).delete(_todoListTable,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    /// TODO: implement this
     return fetchTodo();
   }
 
   Future<List<Todo>> insertSubtask(String todoId, Subtask subtask) async {
-    await (await _db.future).insert(
-      _subtasksTable,
-      {
-        'id': subtask.id,
-        'todo_id': todoId,
-        'task': subtask.task,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    /// TODO: implement this
     return fetchTodo();
   }
 
   Future<List<Todo>> deleteSubtask(String id) async {
-    await (await _db.future).delete(_subtasksTable,  where: 'id = ?', whereArgs: [id]);
+    /// TODO: implement this
     return fetchTodo();
   }
 
   Future<List<Todo>> upsertTodo(Todo todo) async {
-    await (await _db.future).insert(
-      _todoListTable,
-      {
-        'id': todo.id,
-        'title': todo.title,
-        'description': todo.description,
-        'done': todo.done ? 1 : 0,
-        'updated_at': todo.updatedAt.toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    /// TODO: implement this
     return fetchTodo();
   }
 
   Future<List<Todo>> markDone(String id, bool done) async {
-    await (await _db.future).update(
-      _todoListTable,
-      {'done': done ? 1 : 0},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    /// TODO: implement this
     return fetchTodo();
   }
 
